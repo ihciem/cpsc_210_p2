@@ -8,6 +8,7 @@ import android.graphics.drawable.Drawable;
 import android.location.Location;
 import ca.ubc.cs.cpsc210.translink.BusesAreUs;
 import ca.ubc.cs.cpsc210.translink.R;
+import ca.ubc.cs.cpsc210.translink.model.Route;
 import ca.ubc.cs.cpsc210.translink.model.Stop;
 import ca.ubc.cs.cpsc210.translink.model.StopManager;
 import ca.ubc.cs.cpsc210.translink.util.Geometry;
@@ -35,6 +36,8 @@ public class BusStopPlotter extends MapViewOverlay {
     private Marker nearestStnMarker;
     private Activity activity;
     private StopInfoWindow stopInfoWindow;
+    private Location currentLocation;
+
 
     /**
      * Constructor
@@ -59,6 +62,8 @@ public class BusStopPlotter extends MapViewOverlay {
      */
     public void markStops(Location currentLocation) {
         Drawable stopIconDrawable = activity.getResources().getDrawable(R.drawable.stop_icon);
+        this.currentLocation = currentLocation;
+        clearMarkers();
         updateVisibleArea();
         newStopClusterer();
         for (Stop stop : StopManager.getInstance()) {
@@ -70,7 +75,12 @@ public class BusStopPlotter extends MapViewOverlay {
                 setMarker(stop, marker);
                 stopClusterer.add(marker);
                 marker.setInfoWindow(stopInfoWindow);
-                marker.setTitle(stop.getNumber() + " " + stop.getName());
+                StringBuilder routeNames = new StringBuilder();
+                for (Route r : stop.getRoutes()) {
+                    routeNames.append("\n");
+                    routeNames.append(r.getNumber());
+                }
+                marker.setTitle(stop.getNumber() + " " + stop.getName() + routeNames);
             }
         }
     }
@@ -103,7 +113,10 @@ public class BusStopPlotter extends MapViewOverlay {
         Drawable stopIconDrawable = activity.getResources().getDrawable(R.drawable.stop_icon);
         Drawable closestStopIconDrawable = activity.getResources().getDrawable(R.drawable.closest_stop_icon);
 
-        // TODO: complete the implementation of this method (Task 6)
+        if (nearest != null && getMarker(nearest) != null) {
+            nearestStnMarker = getMarker(nearest);
+            nearestStnMarker.setIcon(closestStopIconDrawable);
+        }
     }
 
     /**
@@ -126,4 +139,6 @@ public class BusStopPlotter extends MapViewOverlay {
     private void clearMarkers() {
         stopMarkerMap.clear();
     }
+
+
 }

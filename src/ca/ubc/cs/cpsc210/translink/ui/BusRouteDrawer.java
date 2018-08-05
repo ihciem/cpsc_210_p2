@@ -2,9 +2,15 @@ package ca.ubc.cs.cpsc210.translink.ui;
 
 import android.content.Context;
 import ca.ubc.cs.cpsc210.translink.BusesAreUs;
+import ca.ubc.cs.cpsc210.translink.model.Route;
+import ca.ubc.cs.cpsc210.translink.model.RouteManager;
+import ca.ubc.cs.cpsc210.translink.model.Stop;
+import ca.ubc.cs.cpsc210.translink.model.StopManager;
+import ca.ubc.cs.cpsc210.translink.util.Geometry;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
 import org.osmdroid.bonuspack.overlays.Polyline;
+import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 
 import java.util.ArrayList;
@@ -39,6 +45,24 @@ public class BusRouteDrawer extends MapViewOverlay {
      */
     public void plotRoutes(int zoomLevel) {
         //TODO: complete the implementation of this method (Task 7)
+        busRouteOverlays.clear();
+        busRouteLegendOverlay.clear();
+        updateVisibleArea();
+        float lineWidth = getLineWidth(zoomLevel);
+        for (Route r : StopManager.getInstance().getSelected().getRoutes()) {
+            Polyline p = new Polyline(context);
+            p.setWidth(lineWidth);
+            p.setColor(busRouteLegendOverlay.add(r.getNumber()));
+            List<GeoPoint> points = new ArrayList<>();
+            for (Stop s : r.getStops()) {
+                if (Geometry.rectangleContainsPoint(northWest, southEast, s.getLocn())) {
+                    points.add(Geometry.gpFromLatLon(s.getLocn()));
+                }
+            }
+            p.setPoints(points);
+            busRouteOverlays.add(p);
+        }
+
     }
 
     public List<Polyline> getBusRouteOverlays() {

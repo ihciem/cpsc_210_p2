@@ -1,11 +1,19 @@
 package ca.ubc.cs.cpsc210.translink.ui;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.widget.Toast;
+import ca.ubc.cs.cpsc210.translink.BusesAreUs;
 import ca.ubc.cs.cpsc210.translink.R;
+import ca.ubc.cs.cpsc210.translink.model.Bus;
+import ca.ubc.cs.cpsc210.translink.model.StopManager;
+import ca.ubc.cs.cpsc210.translink.util.Geometry;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
+import org.osmdroid.views.overlay.ItemizedOverlay;
 import org.osmdroid.views.overlay.OverlayItem;
 
 import java.util.ArrayList;
@@ -36,7 +44,11 @@ public class BusLocationPlotter extends MapViewOverlay {
      * Plot buses serving selected stop
      */
     public void plotBuses() {
-        // TODO: complete the implementation of this method (Task 10)
+        busLocationsOverlay.removeAllItems();
+        for (Bus b : StopManager.getInstance().getSelected().getBuses()) {
+            OverlayItem bus = new OverlayItem("Bus", "Bus", Geometry.gpFromLatLon(b.getLatLon()));
+            busLocationsOverlay.addItem(bus);
+        }
     }
 
     /**

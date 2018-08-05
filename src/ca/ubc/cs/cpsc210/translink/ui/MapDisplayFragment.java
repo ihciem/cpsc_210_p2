@@ -10,11 +10,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import ca.ubc.cs.cpsc210.translink.BusesAreUs;
 import ca.ubc.cs.cpsc210.translink.R;
+import ca.ubc.cs.cpsc210.translink.model.Stop;
 import ca.ubc.cs.cpsc210.translink.model.StopManager;
 import ca.ubc.cs.cpsc210.translink.parsers.RouteMapParser;
 import ca.ubc.cs.cpsc210.translink.parsers.StopParser;
 import ca.ubc.cs.cpsc210.translink.parsers.exception.StopDataMissingException;
+import ca.ubc.cs.cpsc210.translink.util.Geometry;
+import ca.ubc.cs.cpsc210.translink.util.LatLon;
 import org.json.JSONException;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.bonuspack.overlays.MapEventsOverlay;
@@ -277,6 +281,11 @@ public class MapDisplayFragment extends Fragment implements MapEventsReceiver, I
      */
     private void markStops() {
         busStopPlotter.markStops(currentLocation);
+        double lat = currentLocation.getLatitude();
+        double lon = currentLocation.getLongitude();
+        LatLon latLon = new LatLon(lat, lon);
+        Stop stop = stopManager.findNearestTo(latLon);
+        busStopPlotter.updateMarkerOfNearest(stop);
         updateOverlays();
     }
 
@@ -295,8 +304,21 @@ public class MapDisplayFragment extends Fragment implements MapEventsReceiver, I
      * @param location the location of the user
      */
     private void handleLocationChange(Location location) {
-        // TODO: complete the implementation of this method (Task 6)
 
+        double lat = location.getLatitude();
+        double lon = location.getLongitude();
+        LatLon latLon = new LatLon(lat, lon);
+        Stop stop = stopManager.findNearestTo(latLon);
+
+        currentLocation = location;
+
+        markStops();
+
+        //update nearest stop text view
+        locationListener.onLocationChanged(stop, latLon);
+
+        //update markers on user location change
+//        busStopPlotter.updateMarkerOfNearest(stop);
     }
 
     /**
@@ -335,9 +357,12 @@ public class MapDisplayFragment extends Fragment implements MapEventsReceiver, I
 
         @Override
         public boolean onScroll(ScrollEvent scrollEvent) {
-            plotRoutes();
-            plotBuses();
+            if (stopManager.getSelected() != null) {
+                plotRoutes();
+                plotBuses();
+            }
             markStops();
+
             mapView.invalidate();
             return false;
         }
@@ -345,8 +370,10 @@ public class MapDisplayFragment extends Fragment implements MapEventsReceiver, I
         @Override
         public boolean onZoom(ZoomEvent zoomEvent) {
             zoom = mapView.getZoomLevel();
-            plotRoutes();
-            plotBuses();
+            if (stopManager.getSelected() != null) {
+                plotRoutes();
+                plotBuses();
+            }
             markStops();
             return false;
         }
@@ -365,7 +392,7 @@ public class MapDisplayFragment extends Fragment implements MapEventsReceiver, I
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 mapView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
             } else {
-                mapView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                mapView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
             }
 
             mapController.setZoom(DEFAULT_ZOOM);

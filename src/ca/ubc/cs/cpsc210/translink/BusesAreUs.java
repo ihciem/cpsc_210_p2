@@ -17,15 +17,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 import ca.ubc.cs.cpsc210.translink.model.Stop;
 import ca.ubc.cs.cpsc210.translink.model.StopManager;
+import ca.ubc.cs.cpsc210.translink.model.exception.StopException;
 import ca.ubc.cs.cpsc210.translink.parsers.ArrivalsParser;
 import ca.ubc.cs.cpsc210.translink.parsers.BusParser;
 import ca.ubc.cs.cpsc210.translink.parsers.exception.ArrivalsDataMissingException;
 import ca.ubc.cs.cpsc210.translink.providers.DataProvider;
 import ca.ubc.cs.cpsc210.translink.providers.HttpArrivalDataProvider;
 import ca.ubc.cs.cpsc210.translink.providers.HttpBusLocationDataProvider;
-import ca.ubc.cs.cpsc210.translink.ui.LocationListener;
-import ca.ubc.cs.cpsc210.translink.ui.MapDisplayFragment;
-import ca.ubc.cs.cpsc210.translink.ui.StopSelectionListener;
+import ca.ubc.cs.cpsc210.translink.ui.*;
 import ca.ubc.cs.cpsc210.translink.util.LatLon;
 import org.json.JSONException;
 
@@ -109,7 +108,13 @@ public class BusesAreUs extends Activity implements LocationListener, StopSelect
      */
     @Override
     public void onLocationChanged(Stop nearest, LatLon locn) {
-        // TODO: Complete the implementation of this method (Task 6)
+        nearestStopLabel = (TextView) findViewById(R.id.nearestStopLabel);
+        myNearestStop = nearest;
+        if (myNearestStop == null) {
+            nearestStopLabel.setText("Stops all out of range");
+        } else {
+            nearestStopLabel.setText(myNearestStop.getName());
+        }
     }
 
     @Override
@@ -149,7 +154,12 @@ public class BusesAreUs extends Activity implements LocationListener, StopSelect
      */
     @Override
     public void onStopSelected(Stop stop) {
-        // TODO: Complete the implementation of this method (Task 7)
+        try {
+            StopManager.getInstance().setSelected(stop);
+            new DownloadBusLocationDataTask().execute(stop);
+        } catch (StopException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
