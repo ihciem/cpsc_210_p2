@@ -61,6 +61,8 @@ public class BusRouteDrawer extends MapViewOverlay {
 
     private void makePolylines(RoutePattern rp) {
 
+        index = 0;
+        while (index < rp.getPath().size()) {
 
             Polyline p = new Polyline(context);
             p.setWidth(lineWidth);
@@ -70,10 +72,16 @@ public class BusRouteDrawer extends MapViewOverlay {
             } catch (NullPointerException e) {
                 p.setColor(busRouteLegendOverlay.add(route.getNumber()));
             }
-
-            List<LatLon> latLons = rp.getPath().subList(index, rp.getPath().size());
+            List<LatLon> latLons;
+            if (index != 0) {
+                latLons = rp.getPath().subList(index - 1, rp.getPath().size());
+            } else {
+                latLons = rp.getPath().subList(index, rp.getPath().size());
+            }
+//            List<LatLon> latLons = rp.getPath().subList(index, rp.getPath().size());
             p.setPoints(getPoints(latLons));
             busRouteOverlays.add(p);
+        }
 
     }
 
@@ -81,21 +89,25 @@ public class BusRouteDrawer extends MapViewOverlay {
 
         LatLon before = null;
         List<GeoPoint> points = new ArrayList<>();
-        index = 0;
 
         for (LatLon ll : latLons) {
             if (before != null) {
-                if (Geometry.rectangleContainsPoint(northWest, southEast, ll)
-                        || Geometry.rectangleIntersectsLine(northWest, southEast, before, ll)) {
+                if (Geometry.rectangleContainsPoint(northWest, southEast, ll)) {
                     points.add(Geometry.gpFromLatLon(ll));
-                } else {
+                } else if (Geometry.rectangleIntersectsLine(northWest, southEast, before, ll)
+                        || Geometry.rectangleIntersectsLine(northWest, southEast, ll, before)) {
+                    if (!points.contains(Geometry.gpFromLatLon(before))) {
+                        points.add(Geometry.gpFromLatLon(before));
+                    }
+                    points.add(Geometry.gpFromLatLon(ll));
+                    index++;
                     return points;
                 }
-            } else {
-                before = ll;
             }
-        }
+            before = ll;
+            index++;
 
+        }
         return points;
     }
 
