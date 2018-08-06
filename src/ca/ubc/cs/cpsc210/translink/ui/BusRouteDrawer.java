@@ -76,9 +76,8 @@ public class BusRouteDrawer extends MapViewOverlay {
             if (index != 0) {
                 latLons = rp.getPath().subList(index - 1, rp.getPath().size());
             } else {
-                latLons = rp.getPath().subList(index, rp.getPath().size());
+                latLons = rp.getPath();
             }
-//            List<LatLon> latLons = rp.getPath().subList(index, rp.getPath().size());
             p.setPoints(getPoints(latLons));
             busRouteOverlays.add(p);
         }
@@ -92,21 +91,19 @@ public class BusRouteDrawer extends MapViewOverlay {
 
         for (LatLon ll : latLons) {
             if (before != null) {
-                if (Geometry.rectangleContainsPoint(northWest, southEast, ll)) {
-                    points.add(Geometry.gpFromLatLon(ll));
-                } else if (Geometry.rectangleIntersectsLine(northWest, southEast, before, ll)
-                        || Geometry.rectangleIntersectsLine(northWest, southEast, ll, before)) {
+                if (Geometry.rectangleIntersectsLine(northWest, southEast, before, ll)) {
                     if (!points.contains(Geometry.gpFromLatLon(before))) {
                         points.add(Geometry.gpFromLatLon(before));
                     }
                     points.add(Geometry.gpFromLatLon(ll));
-                    index++;
+                } else if (Geometry.rectangleContainsPoint(northWest, southEast, ll)) {
+                    points.add(Geometry.gpFromLatLon(ll));
+                } else {
                     return points;
                 }
             }
             before = ll;
             index++;
-
         }
         return points;
     }
