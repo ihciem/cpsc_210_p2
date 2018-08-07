@@ -65,11 +65,11 @@ public class BusRouteDrawer extends MapViewOverlay {
 
         index = 0;
         while (index < rp.getPath().size()) {
+            Polyline p = new Polyline(context);
+            p.setWidth(lineWidth);
+            setColorOfP(p);
             List<GeoPoint> points = getPoints(getLatLons(rp));
             if (points.size() != 0) {
-                Polyline p = new Polyline(context);
-                p.setWidth(lineWidth);
-                setColorOfP(p);
                 p.setPoints(points);
                 busRouteOverlays.add(p);
             }
