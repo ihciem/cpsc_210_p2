@@ -156,6 +156,7 @@ public class BusesAreUs extends Activity implements LocationListener, StopSelect
     public void onStopSelected(Stop stop) {
         try {
             StopManager.getInstance().setSelected(stop);
+            fragment.plotRoutes();
             new DownloadBusLocationDataTask().execute(stop);
         } catch (StopException e) {
             e.printStackTrace();

@@ -28,7 +28,6 @@ public class BusRouteDrawer extends MapViewOverlay {
      */
     private List<Polyline> busRouteOverlays;
 
-    private float lineWidth;
     private Route route;
     private int index;
 
@@ -52,38 +51,38 @@ public class BusRouteDrawer extends MapViewOverlay {
         busRouteOverlays.clear();
         busRouteLegendOverlay.clear();
         updateVisibleArea();
-        lineWidth = getLineWidth(zoomLevel);
+        float lineWidth = getLineWidth(zoomLevel);
         for (Route r : StopManager.getInstance().getSelected().getRoutes()) {
             route = r;
             for (RoutePattern rp : r.getPatterns()) {
-                makePolylines(rp);
+                makePolylines(rp, lineWidth);
             }
         }
     }
 
-    private void makePolylines(RoutePattern rp) {
-
+    private void makePolylines(RoutePattern rp, float lineWidth) {
         index = 0;
         while (index < rp.getPath().size()) {
-            Polyline p = new Polyline(context);
-            p.setWidth(lineWidth);
-            setColorOfP(p);
-            List<GeoPoint> points = getPoints(getLatLons(rp));
+            int color = getColorOfP();
+            List<GeoPoint> points = getPoints(getRemainingPath(rp));
             if (points.size() != 0) {
+                Polyline p = new Polyline(context);
+                p.setWidth(lineWidth);
+                p.setColor(color);
                 p.setPoints(points);
                 busRouteOverlays.add(p);
             }
         }
     }
 
-    private List<LatLon> getLatLons(RoutePattern rp) {
-        List<LatLon> latLons;
+    private List<LatLon> getRemainingPath(RoutePattern rp) {
+        List<LatLon> path;
         if (index != 0) {
-            latLons = rp.getPath().subList(index - 1, rp.getPath().size());
+            path = rp.getPath().subList(index - 1, rp.getPath().size());
         } else {
-            latLons = rp.getPath();
+            path = rp.getPath();
         }
-        return latLons;
+        return path;
     }
 
     private List<GeoPoint> getPoints(List<LatLon> latLons) {
@@ -115,13 +114,14 @@ public class BusRouteDrawer extends MapViewOverlay {
         return false;
     }
 
-    private void setColorOfP(Polyline p) {
+    private int getColorOfP() {
+        int color;
         try {
-            int color = busRouteLegendOverlay.getColor(route.getNumber());
-            p.setColor(color);
+            color = busRouteLegendOverlay.getColor(route.getNumber());
         } catch (NullPointerException e) {
-            p.setColor(busRouteLegendOverlay.add(route.getNumber()));
+            color = busRouteLegendOverlay.add(route.getNumber());
         }
+        return color;
     }
 
 

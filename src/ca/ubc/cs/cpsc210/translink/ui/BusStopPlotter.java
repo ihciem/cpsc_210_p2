@@ -11,6 +11,7 @@ import ca.ubc.cs.cpsc210.translink.model.Route;
 import ca.ubc.cs.cpsc210.translink.model.Stop;
 import ca.ubc.cs.cpsc210.translink.model.StopManager;
 import ca.ubc.cs.cpsc210.translink.util.Geometry;
+import ca.ubc.cs.cpsc210.translink.util.LatLon;
 import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer;
 import org.osmdroid.bonuspack.overlays.Marker;
 import org.osmdroid.views.MapView;
@@ -66,6 +67,11 @@ public class BusStopPlotter extends MapViewOverlay {
                 makeMarker(stop, stopIconDrawable);
             }
         }
+        double lat = currentLocation.getLatitude();
+        double lon = currentLocation.getLongitude();
+        LatLon latLon = new LatLon(lat, lon);
+        Stop stop = StopManager.getInstance().findNearestTo(latLon);
+        updateMarkerOfNearest(stop);
     }
 
     private void makeMarker(Stop stop, Drawable stopIconDrawable) {
@@ -111,6 +117,11 @@ public class BusStopPlotter extends MapViewOverlay {
     public void updateMarkerOfNearest(Stop nearest) {
         Drawable stopIconDrawable = activity.getResources().getDrawable(R.drawable.stop_icon);
         Drawable closestStopIconDrawable = activity.getResources().getDrawable(R.drawable.closest_stop_icon);
+
+        if (nearestStnMarker != null) {
+            Marker marker = nearestStnMarker;
+            marker.setIcon(stopIconDrawable);
+        }
 
         if (nearest != null && getMarker(nearest) != null) {
             nearestStnMarker = getMarker(nearest);

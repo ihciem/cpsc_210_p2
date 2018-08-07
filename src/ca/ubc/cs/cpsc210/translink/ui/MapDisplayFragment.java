@@ -281,11 +281,6 @@ public class MapDisplayFragment extends Fragment implements MapEventsReceiver, I
      */
     private void markStops() {
         busStopPlotter.markStops(currentLocation);
-        double lat = currentLocation.getLatitude();
-        double lon = currentLocation.getLongitude();
-        LatLon latLon = new LatLon(lat, lon);
-        Stop stop = stopManager.findNearestTo(latLon);
-        busStopPlotter.updateMarkerOfNearest(stop);
         updateOverlays();
     }
 
@@ -311,14 +306,8 @@ public class MapDisplayFragment extends Fragment implements MapEventsReceiver, I
         Stop stop = stopManager.findNearestTo(latLon);
 
         currentLocation = location;
-
-        markStops();
-
-        //update nearest stop text view
         locationListener.onLocationChanged(stop, latLon);
-
-        //update markers on user location change
-//        busStopPlotter.updateMarkerOfNearest(stop);
+        busStopPlotter.updateMarkerOfNearest(stop);
     }
 
     /**
