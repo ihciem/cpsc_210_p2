@@ -2,7 +2,6 @@ package ca.ubc.cs.cpsc210.translink.ui;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
-import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
@@ -12,7 +11,6 @@ import ca.ubc.cs.cpsc210.translink.model.Route;
 import ca.ubc.cs.cpsc210.translink.model.Stop;
 import ca.ubc.cs.cpsc210.translink.model.StopManager;
 import ca.ubc.cs.cpsc210.translink.util.Geometry;
-import ca.ubc.cs.cpsc210.translink.util.LatLon;
 import org.osmdroid.bonuspack.clustering.RadiusMarkerClusterer;
 import org.osmdroid.bonuspack.overlays.Marker;
 import org.osmdroid.views.MapView;
@@ -36,8 +34,6 @@ public class BusStopPlotter extends MapViewOverlay {
     private Marker nearestStnMarker;
     private Activity activity;
     private StopInfoWindow stopInfoWindow;
-    private Location currentLocation;
-
 
     /**
      * Constructor
@@ -62,27 +58,30 @@ public class BusStopPlotter extends MapViewOverlay {
      */
     public void markStops(Location currentLocation) {
         Drawable stopIconDrawable = activity.getResources().getDrawable(R.drawable.stop_icon);
-        this.currentLocation = currentLocation;
         clearMarkers();
         updateVisibleArea();
         newStopClusterer();
         for (Stop stop : StopManager.getInstance()) {
             if (Geometry.rectangleContainsPoint(northWest, southEast, stop.getLocn())) {
-                Marker marker = new Marker(mapView);
-                marker.setIcon(stopIconDrawable);
-                marker.setRelatedObject(stop);
-                marker.setPosition(Geometry.gpFromLatLon(stop.getLocn()));
-                setMarker(stop, marker);
-                stopClusterer.add(marker);
-                marker.setInfoWindow(stopInfoWindow);
-                StringBuilder routeNames = new StringBuilder();
-                for (Route r : stop.getRoutes()) {
-                    routeNames.append("\n");
-                    routeNames.append(r.getNumber());
-                }
-                marker.setTitle(stop.getNumber() + " " + stop.getName() + routeNames);
+                makeMarker(stop, stopIconDrawable);
             }
         }
+    }
+
+    private void makeMarker(Stop stop, Drawable stopIconDrawable) {
+        Marker marker = new Marker(mapView);
+        marker.setIcon(stopIconDrawable);
+        marker.setRelatedObject(stop);
+        marker.setPosition(Geometry.gpFromLatLon(stop.getLocn()));
+        setMarker(stop, marker);
+        stopClusterer.add(marker);
+        marker.setInfoWindow(stopInfoWindow);
+        StringBuilder routeNames = new StringBuilder();
+        for (Route r : stop.getRoutes()) {
+            routeNames.append("\n");
+            routeNames.append(r.getNumber());
+        }
+        marker.setTitle(stop.getNumber() + " " + stop.getName() + routeNames);
     }
 
     /**

@@ -2,7 +2,9 @@ package ca.ubc.cs.cpsc210.translink.ui;
 
 import android.content.Context;
 import ca.ubc.cs.cpsc210.translink.BusesAreUs;
-import ca.ubc.cs.cpsc210.translink.model.*;
+import ca.ubc.cs.cpsc210.translink.model.Route;
+import ca.ubc.cs.cpsc210.translink.model.RoutePattern;
+import ca.ubc.cs.cpsc210.translink.model.StopManager;
 import ca.ubc.cs.cpsc210.translink.util.Geometry;
 import ca.ubc.cs.cpsc210.translink.util.LatLon;
 import org.osmdroid.DefaultResourceProxyImpl;
@@ -63,25 +65,25 @@ public class BusRouteDrawer extends MapViewOverlay {
 
         index = 0;
         while (index < rp.getPath().size()) {
-
-            Polyline p = new Polyline(context);
-            p.setWidth(lineWidth);
-            try {
-                int color = busRouteLegendOverlay.getColor(route.getNumber());
-                p.setColor(color);
-            } catch (NullPointerException e) {
-                p.setColor(busRouteLegendOverlay.add(route.getNumber()));
+            List<GeoPoint> points = getPoints(getLatLons(rp));
+            if (points.size() != 0) {
+                Polyline p = new Polyline(context);
+                p.setWidth(lineWidth);
+                setColorOfP(p);
+                p.setPoints(points);
+                busRouteOverlays.add(p);
             }
-            List<LatLon> latLons;
-            if (index != 0) {
-                latLons = rp.getPath().subList(index - 1, rp.getPath().size());
-            } else {
-                latLons = rp.getPath();
-            }
-            p.setPoints(getPoints(latLons));
-            busRouteOverlays.add(p);
         }
+    }
 
+    private List<LatLon> getLatLons(RoutePattern rp) {
+        List<LatLon> latLons;
+        if (index != 0) {
+            latLons = rp.getPath().subList(index - 1, rp.getPath().size());
+        } else {
+            latLons = rp.getPath();
+        }
+        return latLons;
     }
 
     private List<GeoPoint> getPoints(List<LatLon> latLons) {
@@ -91,14 +93,7 @@ public class BusRouteDrawer extends MapViewOverlay {
 
         for (LatLon ll : latLons) {
             if (before != null) {
-                if (Geometry.rectangleIntersectsLine(northWest, southEast, before, ll)) {
-                    if (!points.contains(Geometry.gpFromLatLon(before))) {
-                        points.add(Geometry.gpFromLatLon(before));
-                    }
-                    points.add(Geometry.gpFromLatLon(ll));
-                } else if (Geometry.rectangleContainsPoint(northWest, southEast, ll)) {
-                    points.add(Geometry.gpFromLatLon(ll));
-                } else {
+                if (cannotAdd(before, points, ll)) {
                     return points;
                 }
             }
@@ -106,6 +101,27 @@ public class BusRouteDrawer extends MapViewOverlay {
             index++;
         }
         return points;
+    }
+
+    private boolean cannotAdd(LatLon before, List<GeoPoint> points, LatLon ll) {
+        if (Geometry.rectangleIntersectsLine(northWest, southEast, before, ll)) {
+            if (!points.contains(Geometry.gpFromLatLon(before))) {
+                points.add(Geometry.gpFromLatLon(before));
+            }
+            points.add(Geometry.gpFromLatLon(ll));
+        } else {
+            return true;
+        }
+        return false;
+    }
+
+    private void setColorOfP(Polyline p) {
+        try {
+            int color = busRouteLegendOverlay.getColor(route.getNumber());
+            p.setColor(color);
+        } catch (NullPointerException e) {
+            p.setColor(busRouteLegendOverlay.add(route.getNumber()));
+        }
     }
 
 
